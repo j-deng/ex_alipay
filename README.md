@@ -1,5 +1,7 @@
 # ExAlipay
 
+![CI](https://travis-ci.org/j-deng/ex_alipay.svg?branch=master)
+
 An Alipay client that is extendable.
 
 The docs can be found at [https://hexdocs.pm/ex_alipay/0.1.0](https://hexdocs.pm/ex_alipay/0.1.0).
