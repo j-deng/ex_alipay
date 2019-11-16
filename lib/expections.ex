@@ -6,19 +6,19 @@ defmodule ExAlipay.RequestError do
   def message(%__MODULE__{status_code: status_code, reason: nil}) do
     "ExAlipay request failed with status_code #{status_code}"
   end
+
   def message(%__MODULE__{status_code: 200, reason: reason}) do
     "ExAlipay request failed, #{inspect(reason)}"
   end
 end
 
-
 defmodule ExAlipay.ResponseError do
   @type t :: %__MODULE__{
-    code: binary,
-    sub_code: binary,
-    msg: binary,
-    sub_msg: binary
-  }
+          code: binary,
+          sub_code: binary,
+          msg: binary,
+          sub_msg: binary
+        }
 
   defexception [:code, :sub_code, :msg, :sub_msg]
 
@@ -31,7 +31,7 @@ defmodule ExAlipay.ResponseError do
       code: code,
       sub_code: sub_code,
       msg: msg,
-      sub_msg: sub_msg,
+      sub_msg: sub_msg
     }
   end
 end

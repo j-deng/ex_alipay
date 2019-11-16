@@ -4,7 +4,7 @@ defmodule ExAlipay do
 
   ### Setup
 
-  Add :ex_alipay to the deps in `mix.exe`:
+  Add :ex_alipay to the deps in `mix.exs`:
 
   ```elixir
   {:ex_alipay, "~> 0.1"}

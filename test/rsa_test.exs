@@ -8,6 +8,7 @@ defmodule ExAlipayRSATest do
 
   test "rsa sign and verify RSA and RSA2" do
     str = "yoyoyo"
+
     ["RSA", "RSA2"]
     |> Enum.map(fn sign_type ->
       signature = RSA.sign(str, sign_type, @private_key)
