@@ -7,7 +7,7 @@ defmodule ExAlipay.RSA do
   def sign(str, sign_type, private_key) do
     [rsa_entry] = :public_key.pem_decode(private_key)
     key = :public_key.pem_entry_decode(rsa_entry)
-    :public_key.sign(str, get_alg(sign_type), key) |> Base.encode64
+    :public_key.sign(str, get_alg(sign_type), key) |> Base.encode64()
   end
 
   @spec verify(binary, atom, binary, binary) :: boolean
