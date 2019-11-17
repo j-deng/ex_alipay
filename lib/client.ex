@@ -52,7 +52,7 @@ defmodule ExAlipay.Client do
   })
   ```
 
-  IN the handler view of alipay notify:
+  In the handler view of alipay notify:
 
   ```elixir
   if AlipayClient.verify_notify_sign?(body) do
@@ -64,7 +64,7 @@ defmodule ExAlipay.Client do
   end
   ```
 
-  Extend new api you need that not in `ExAlipay.Client`.
+  Extend new api you need that isn't provided by `ExAlipay.Client`.
 
   ```elixir
   defmodule AlipayClient do
@@ -73,7 +73,10 @@ defmodule ExAlipay.Client do
     # access the public api request that defined in ExAlipay.Client
     # also possible to use functions in ExAlipay.Utils directly
     # see: https://docs.open.alipay.com/api_1/alipay.trade.precreate
-    def pre_create(params), do: request(@client, "alipay.trade.precreate", params)
+    def pre_create(params) do
+      {params, ext_params} = prepare_trade_params(params)
+      request(@client, "alipay.trade.precreate", params, ext_params)
+    end
   end
 
   # now we can use the new api
