@@ -199,8 +199,26 @@ defmodule ExAlipay.Client do
     Utils.build_request_str(client, @supported_api.app_pay, params, ext_params)
   end
 
-  defp prepare_trade_params(params) do
-    # Pop `return_url` and `notify_url` from create trade params as ext_params
+  @doc """
+  Pop `return_url` and `notify_url` from create trade params as ext_params.
+
+  ## Examples:
+
+      params = %{
+        out_trade_no: "out_trade_no",
+        total_amount: 100,
+        subject: "the subject",
+        notify_url: "http://example.com/notify_url",
+      }
+
+      ExAlipay.Client.prepare_trade_params(params)
+      # Result:
+      # {
+      #   %{out_trade_no: "out_trade_no", subject: "the subject", total_amount: 100},
+      #   %{notify_url: "http://example.com/notify_url", return_url: nil}
+      # }
+  """
+  def prepare_trade_params(params) do
     {return_url, params} = Map.pop(params, :return_url)
     {notify_url, params} = Map.pop(params, :notify_url)
     ext_params = %{return_url: return_url, notify_url: notify_url}
