@@ -52,7 +52,7 @@ defmodule ExAlipay.Client do
   })
   ```
 
-  IN the handler view of alipay notify:
+  In the handler view of alipay notify:
 
   ```elixir
   if AlipayClient.verify_notify_sign?(body) do
@@ -64,7 +64,7 @@ defmodule ExAlipay.Client do
   end
   ```
 
-  Extend new api you need that not in `ExAlipay.Client`.
+  Extend new api you need that isn't provided by `ExAlipay.Client`.
 
   ```elixir
   defmodule AlipayClient do
@@ -73,7 +73,10 @@ defmodule ExAlipay.Client do
     # access the public api request that defined in ExAlipay.Client
     # also possible to use functions in ExAlipay.Utils directly
     # see: https://docs.open.alipay.com/api_1/alipay.trade.precreate
-    def pre_create(params), do: request(@client, "alipay.trade.precreate", params)
+    def pre_create(params) do
+      {params, ext_params} = prepare_trade_params(params)
+      request(@client, "alipay.trade.precreate", params, ext_params)
+    end
   end
 
   # now we can use the new api
@@ -104,7 +107,7 @@ defmodule ExAlipay.Client do
           charset: binary,
           sign_type: binary,
           version: binary,
-          sandbox?: boolean,
+          sandbox?: boolean
         }
 
   @supported_api %{
@@ -119,7 +122,7 @@ defmodule ExAlipay.Client do
     auth_token: "alipay.system.oauth.token",
     user_info: "alipay.user.info.share",
     transfer: "alipay.fund.trans.toaccount.transfer",
-    transfer_query: "alipay.fund.trans.order.query",
+    transfer_query: "alipay.fund.trans.order.query"
   }
 
   defmacro __using__(opts) do
@@ -132,8 +135,9 @@ defmodule ExAlipay.Client do
 
   defmacro __before_compile__(_) do
     exist_functions = Client.__info__(:functions)
+
     supported_api()
-    |> Map.keys
+    |> Map.keys()
     |> Enum.filter(fn key -> Keyword.has_key?(exist_functions, key) end)
     |> Enum.concat([:auth_url, :app_auth_str, :verify_notify_sign?])
     |> Enum.map(fn key ->
@@ -198,8 +202,26 @@ defmodule ExAlipay.Client do
     Utils.build_request_str(client, @supported_api.app_pay, params, ext_params)
   end
 
-  defp prepare_trade_params(params) do
-    # Pop `return_url` and `notify_url` from create trade params as ext_params
+  @doc """
+  Pop `return_url` and `notify_url` from create trade params as ext_params.
+
+  ## Examples:
+
+      params = %{
+        out_trade_no: "out_trade_no",
+        total_amount: 100,
+        subject: "the subject",
+        notify_url: "http://example.com/notify_url",
+      }
+
+      ExAlipay.Client.prepare_trade_params(params)
+      # Result:
+      # {
+      #   %{out_trade_no: "out_trade_no", subject: "the subject", total_amount: 100},
+      #   %{notify_url: "http://example.com/notify_url", return_url: nil}
+      # }
+  """
+  def prepare_trade_params(params) do
     {return_url, params} = Map.pop(params, :return_url)
     {notify_url, params} = Map.pop(params, :notify_url)
     ext_params = %{return_url: return_url, notify_url: notify_url}
@@ -366,6 +388,7 @@ defmodule ExAlipay.Client do
     state = Map.get(params, :state)
     scope = Map.get(params, :scope, "auth_user")
     url = "#{base_url}?app_id=#{client.appid}&scope=#{scope}&redirect_uri=#{redirect_uri}"
+
     case state do
       nil -> url
       _ -> "#{url}&state=#{state}"
@@ -395,8 +418,9 @@ defmodule ExAlipay.Client do
       scope: "kuaijie",
       target_id: target_id,
       auth_type: "AUTHACCOUNT",
-      sign_type: "RSA2",
+      sign_type: "RSA2"
     }
+
     data = Utils.create_sign_str(params)
     sign = Utils.create_sign(client, data)
     "#{data}&sign=#{sign}"
@@ -408,6 +432,7 @@ defmodule ExAlipay.Client do
   @spec request(%Client{}, binary, map, map) :: map
   def request(client, method, content, ext_params \\ %{}) do
     url = Utils.build_request_url(client, method, content, ext_params)
+
     with {:ok, resp} <- @http_adapter.get(url),
          {:ok, body} <- verify_status(resp),
          {:ok, key} <- verify_request_sign(client, body),
@@ -422,30 +447,36 @@ defmodule ExAlipay.Client do
   defp verify_status(%{status_code: 200, body: body}) do
     {:ok, body}
   end
+
   defp verify_status(%{status_code: status_code}) do
     {:error, %RequestError{status_code: status_code}}
   end
 
   defp check_response_data(resp_data) do
     case resp_data["code"] do
-      nil -> {:ok, resp_data} # api response like auth_token without code
-      "10000" -> {:ok, resp_data} # 10000 is the success code of alipay
+      # api response like auth_token without code
+      nil -> {:ok, resp_data}
+      # 10000 is the success code of alipay
+      "10000" -> {:ok, resp_data}
       _ -> {:error, ResponseError.from_map(resp_data)}
     end
   end
 
   defp verify_request_sign(client, body) do
     regex = ~r/"(?<key>\w+_response)":(?<response>{[^}]+})/
+
     case Regex.named_captures(regex, body) do
       %{"response" => response, "key" => key} ->
         resp_json = Jason.decode!(body)
-        ok? = RSA.verify(
-          response, client.sign_type, client.public_key, resp_json["sign"])
+        ok? = RSA.verify(response, client.sign_type, client.public_key, resp_json["sign"])
+
         cond do
           ok? -> {:ok, key}
           not ok? -> {:error, %RequestError{reason: "verify sign failed"}}
         end
-      nil -> {:error, %RequestError{reason: "unexpected response data"}}
+
+      nil ->
+        {:error, %RequestError{reason: "unexpected response data"}}
     end
   end
 
@@ -458,13 +489,14 @@ defmodule ExAlipay.Client do
     {sign_type, body} = Map.pop(body, :sign_type)
 
     body
-    |> Utils.create_sign_str
+    |> Utils.create_sign_str()
     |> RSA.verify(sign_type, client.public_key, sign)
   end
 
   defp get_base_auth_url(%Client{sandbox?: false}) do
     "https://openauth.alipay.com/oauth2/publicAppAuthorize.htm"
   end
+
   defp get_base_auth_url(%Client{sandbox?: true}) do
     "https://openauth.alipaydev.com/oauth2/publicAppAuthorize.htm"
   end
