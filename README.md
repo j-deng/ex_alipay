@@ -9,7 +9,7 @@ An Alipay client that is extendable.
 ```elixir
 def deps do
   [
-    {:ex_alipay, "~> 0.1.0"}
+    {:ex_alipay, "~> 0.1.1"}
   ]
 end
 ```
