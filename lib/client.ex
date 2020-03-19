@@ -463,7 +463,7 @@ defmodule ExAlipay.Client do
   end
 
   defp verify_request_sign(client, body) do
-    regex = ~r/"(?<key>\w+_response)":(?<response>{[^}]+})/
+    regex = ~r/"(?<key>\w+_response)":(?<response>.*),"sign":/
 
     case Regex.named_captures(regex, body) do
       %{"response" => response, "key" => key} ->
