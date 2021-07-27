@@ -31,7 +31,8 @@ defmodule ExAlipay.MixProject do
       {:jason, "~> 1.1"},
       {:httpoison, "~> 1.4"},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
-      {:mox, "~> 0.5", only: :test}
+      {:mox, "~> 0.5", only: :test},
+      {:x509, "~> 0.8.3"}
     ]
   end
 

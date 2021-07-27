@@ -65,6 +65,16 @@ defmodule ExAlipay.Utils do
           Map.put(params, :biz_content, biz_content)
       end
 
+    # in cert mode, put sn to request params
+    params =
+      if Client.cert_mode?(client) do
+        params
+        |> Map.put(:app_cert_sn, RSA.app_cert_sn(client))
+        |> Map.put(:alipay_root_cert_sn, RSA.alipay_root_cert_sn(client))
+      else
+        params
+      end
+
     params
     |> Map.put(:sign, create_sign(client, params))
     |> URI.encode_query()

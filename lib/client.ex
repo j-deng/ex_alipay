@@ -37,7 +37,11 @@ defmodule ExAlipay.Client do
     pid: "PID",
     public_key: "-- public_key --",
     private_key: "-- private_key --",
-    sandbox?: false
+    sandbox?: false,
+    # cert_mode fields, cert content
+    app_cert: "-----BEGIN CERTIFICATE-----",
+    alipay_root_cert: "-----BEGIN CERTIFICATE-----",
+    alipay_cert: "-----BEGIN CERTIFICATE-----"
   ```
 
   Use the `page_pay`:
@@ -96,7 +100,10 @@ defmodule ExAlipay.Client do
             charset: "utf-8",
             sign_type: "RSA2",
             version: "1.0",
-            sandbox?: false
+            sandbox?: false,
+            app_cert: nil,
+            alipay_root_cert: nil,
+            alipay_cert: nil
 
   @type t :: %__MODULE__{
           appid: binary,
@@ -107,7 +114,10 @@ defmodule ExAlipay.Client do
           charset: binary,
           sign_type: binary,
           version: binary,
-          sandbox?: boolean
+          sandbox?: boolean,
+          app_cert: binary,
+          alipay_root_cert: binary,
+          alipay_cert: binary
         }
 
   @supported_api %{
@@ -488,9 +498,21 @@ defmodule ExAlipay.Client do
     {sign, body} = Map.pop(body, :sign)
     {sign_type, body} = Map.pop(body, :sign_type)
 
-    body
-    |> Utils.create_sign_str()
-    |> RSA.verify(sign_type, client.public_key, sign)
+    sorted_body =
+      body
+      |> Utils.create_sign_str()
+
+    if cert_mode?(client),
+      do: RSA.verify_in_cert_mode(sorted_body, sign_type, client.alipay_cert, sign),
+      else: RSA.verify(sorted_body, sign_type, client.public_key, sign)
+  end
+
+  @doc """
+    Client use cert mode or not
+  """
+  @spec cert_mode?(ExAlipay.Client.t()) :: boolean
+  def cert_mode?(%__MODULE__{} = client) do
+    not is_nil(client.alipay_root_cert) and not is_nil(client.app_cert)
   end
 
   defp get_base_auth_url(%Client{sandbox?: false}) do
