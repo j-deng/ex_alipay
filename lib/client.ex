@@ -90,7 +90,7 @@ defmodule ExAlipay.Client do
   alias ExAlipay.{Client, RSA, Utils}
   alias ExAlipay.{RequestError, ResponseError}
 
-  @http_adapter Application.get_env(:ex_alipay, :http_adapter)
+  @http_adapter HTTPoison
 
   defstruct appid: nil,
             public_key: nil,
