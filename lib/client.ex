@@ -473,12 +473,24 @@ defmodule ExAlipay.Client do
   end
 
   defp verify_request_sign(client, body) do
-    regex = ~r/"(?<key>\w+_response)":(?<response>.*),"sign":/
+    regex =
+      if cert_mode?(client) do
+        ~r/"(?<key>\w+_response)":(?<response>.*),"alipay_cert_sn":/
+      else
+        ~r/"(?<key>\w+_response)":(?<response>.*),"sign":/
+      end
 
     case Regex.named_captures(regex, body) do
       %{"response" => response, "key" => key} ->
         resp_json = Jason.decode!(body)
-        ok? = RSA.verify(response, client.sign_type, client.public_key, resp_json["sign"])
+        sign = resp_json["sign"]
+
+        ok? =
+          if cert_mode?(client) do
+            RSA.verify_in_cert_mode(response, client.sign_type, client.alipay_cert, sign)
+          else
+            RSA.verify(response, client.sign_type, client.public_key, sign)
+          end
 
         cond do
           ok? -> {:ok, key}
