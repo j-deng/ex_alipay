@@ -483,7 +483,7 @@ defmodule ExAlipay.Client do
   @doc """
   Verify the sign of alipay notify, used in handler of notify_url.
   """
-  @spec verify_notify_sign?(Client.t(), Map.t()) :: boolean
+  @spec verify_notify_sign?(Client.t(), map()) :: boolean
   def verify_notify_sign?(client, body) do
     {sign, body} = Map.pop(body, :sign)
     {sign_type, body} = Map.pop(body, :sign_type)
